@@ -1,0 +1,47 @@
+
+README v.1.0 10/26/2011
+
+TABLE OF CONTENTS:
+File Listing
+Limitations
+Instructions
+
+File Listing:
+x.c: Source for fake program
+y.c: Source for fake program
+get_addresses.sh: Grabs needed addresses from the system map
+input_output.c: Inputs and outputs to/from a kernel module 
+Makefile: Make
+proc_listing.c: Lists in /var/logs/kern.log all processes with > 3 files open
+README: This file
+run_y_instead_of_x.c: Source for run_y_instead_of_x
+
+Limitations:
+This software has only been tested on a M11x Alienware laptop with Ubuntu Linux (kernel 3.0.0).  The Ubuntu is in a dual boot situation.  I tried to make the software as portable as possible, but was only able to test on my laptop.
+run_y_instead_of_x will segmentation fault if it cannot find y.  
+With run_y_instead_of_x make seg faults as well. 
+Note that the executable MUST run execve to be intercepted....So homegrown programs will work, but system commands may not.  /bin/ls will work.  /bin/pwd will not. 
+
+Instructions:
+
+1. Insert your System.map file into the local directory.  Remove any other System.map files in the directory. I decided to use a local System.map* file because you may not always be building on your target computer. The build will not work correctly without a System.map file.
+
+2. type make
+
+3. Load each kernel module to run it.
+
+a. sudo insmod input_output.ko
+This will subsequently ask you to enter some input, take that input and echo it to you on your console.
+
+b. sudo insmod proc_listing.ko
+This file will print in the /var/logs/kern.log the number of processes with > 3 files open. (not including /proc files or stdin/out/err as files)
+
+c. sudo insmod run_y_instead_of_x.ko x=<command to replace> y=<command to replace x with>
+This file will execute y each time x is run. fake_program is provided as a "safe" program to set for y.
+example: sudo insmod run_y_instead_of_x.ko x="/bin/ls" y="$PWD/yyy"
+Where $PWD is the current directory.
+You may alternatively run this module without parameters:
+sudo insmod run_y_instead_of_x.ko
+This will set x=xxxxx and y=yyy. Please ensure that xxxxx and yyy stay in this directory. These executables are built with the make command.
+
+
