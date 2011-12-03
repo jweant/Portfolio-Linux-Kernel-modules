@@ -1,5 +1,5 @@
 
-README v.1.0 10/26/2011
+README v.1.1 12/2/2011
 
 TABLE OF CONTENTS:
 File Listing
@@ -19,8 +19,12 @@ run_y_instead_of_x.c: Source for run_y_instead_of_x
 Limitations:
 This software has only been tested on a M11x Alienware laptop with Ubuntu Linux (kernel 3.0.0).  The Ubuntu is in a dual boot situation.  I tried to make the software as portable as possible, but was only able to test on my laptop.
 run_y_instead_of_x will segmentation fault if it cannot find y.  
-With run_y_instead_of_x make seg faults as well. 
+With run_y_instead_of_x make seg faults as well...It was hypothesized that make is just an alias to gmake, so its not catching make since its an alias, but that's not the case here because make isn't an alias.
 Note that the executable MUST run execve to be intercepted....So homegrown programs will work, but system commands may not.  /bin/ls will work.  /bin/pwd will not. 
+Also, its been reported that proc_listing seg faults as soon as its run as well, but I haven't been able to make it happen.  But the root cause was found (thx to the person who found it, I forgot his name and the root cause is that I don't
+have something locked when I'm reading through the /proc directories), and I'll
+fix that eventually when I have time.  
+
 
 Instructions:
 
@@ -34,7 +38,7 @@ a. sudo insmod input_output.ko
 This will subsequently ask you to enter some input, take that input and echo it to you on your console.
 
 b. sudo insmod proc_listing.ko
-This file will print in the /var/logs/kern.log the number of processes with > 3 files open. (not including /proc files or stdin/out/err as files)
+This file will print in the /var/logs/kern.log the number of processes with > 3 files open. (not including /proc files or stdin/out/err as files) Assuming it doesn't crash immediately...
 
 c. sudo insmod run_y_instead_of_x.ko x=<command to replace> y=<command to replace x with>
 This file will execute y each time x is run. fake_program is provided as a "safe" program to set for y.
@@ -42,6 +46,6 @@ example: sudo insmod run_y_instead_of_x.ko x="/bin/ls" y="$PWD/yyy"
 Where $PWD is the current directory.
 You may alternatively run this module without parameters:
 sudo insmod run_y_instead_of_x.ko
-This will set x=xxxxx and y=yyy. Please ensure that xxxxx and yyy stay in this directory. These executables are built with the make command.
+This will set x=xxxxx and y=yyy. Please ensure that xxxxx and yyy stay in this directory. These executables are built with the make command (/usr/bin/make).
 
 
