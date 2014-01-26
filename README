@@ -1,10 +1,11 @@
-
 README v.1.1 12/2/2011
 
 TABLE OF CONTENTS:
 File Listing
 Limitations
 Instructions
+
+Most of the kernel modules were modified from www.tldp.org.
 
 File Listing:
 x.c: Source for fake program
